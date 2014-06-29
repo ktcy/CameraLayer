@@ -2,6 +2,7 @@ class CameraLayer extends Layer
     constructor: (options = {}) ->
         super options
 
+        @_stream = null
         @_video = document.createElement "video"
         @_element.appendChild @_video
 
@@ -14,39 +15,54 @@ class CameraLayer extends Layer
         @_video.addEventListener "canplaythrough", =>
             @_video.play()
 
-        @backgroundColor = "rgba(0, 0, 0, 1.0)"
-        @flip = options.flip ? false
+        @autoflip = true
+        @flipped = options.flip ? false
+        @facing = "environment"
         @clip = true;
+        @backgroundColor = "rgba(0, 0, 0, 1.0)"
 
-    @define "flip",
-        get: -> @_flip
+    @define "facing",
+        get: -> @_facing
         set: (value) ->
-            flip = !!value
-            x = if flip then -1 else 1
+            @_facing = value
+            @flipped = @_facing is "user" if @_autoflip
+            @_facing
+
+    @define "autoflip",
+        get: -> @_autoflip
+        set: (value) -> @_autoflip = !!value
+
+    @define "flipped",
+        get: -> @_flipped
+        set: (value) ->
+            flipped = !!value
+            x = if flipped then -1 else 1
             @_video.style.webkitTransform = "scale(" + x + ",1)"
-            @_flip = flip
+            @_flipped = flipped
 
     start: ->
-        navigator.webkitGetUserMedia?(
-            video:
-                mandatory:
-                    minWidth: 1920
-                    minHeight: 1080
-            (stream) =>
-                @_video.src = URL.createObjectURL stream
-            (error) =>
-                alert err
-        )
+        @_video.src = null
+        @_stream?.stop()
 
-    @getCameras: (callback) ->
-        MediaStreamTrack.getSources (sources) ->
-            cameras = sources.filter (source) ->
-                source.kind is "video"
-            callback cameras
+        MediaStreamTrack.getSources (sources) =>
+            camera = _.findWhere sources, kind:"video", facing:@_facing
+            camera ?= _.findWhere sources, kind:"video"
 
-# CameraLayer.getCameras (cameras) -> console.log cameras
+            navigator.webkitGetUserMedia?(
+                video:
+                    optional:
+                        [sourceId:camera.id]
+                    mandatory:
+                        minWidth: 1920
+                        minHeight: 1080
+                (stream) =>
+                    @_stream = stream
+                    @_video.src = URL.createObjectURL stream
+                (error) =>
+                    alert err
+            )
 
-camera = new CameraLayer flip:true
+camera = new CameraLayer
 camera.start()
 
 layout = ->
@@ -57,13 +73,10 @@ layout = ->
 layout()
 Screen.on "resize", layout
 
-camera.states.animationOptions =
-    curve: "spring"
-    curveOptions:
-        tension: 500
-
-camera.states.add
-    zoomed: { scale: 1.5 }
-
 camera.on Events.Click, ->
-    this.states.next()
+    switch @facing
+        when "user" then @facing = "environment"
+        when "environment" then @facing = "user"
+
+    @start()
+
