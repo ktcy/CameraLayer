@@ -102,4 +102,4 @@ class CameraLayer extends Layer
         createObjectURL = window.URL?.createObjectURL
         _.isFunction(getUserMedia) and _.isFunction(createObjectURL)
 
-window.CameraLayer = CameraLayer
+Framer.CameraLayer = CameraLayer
