@@ -77,9 +77,9 @@ class CameraLayer extends Layer
       @_requestCamera()
 
   _requestCamera: ->
-    @_video.src = null
+    @_video.src = ''
     @_stream?.stop()
-    
+
     @_getUserMedia
       video:
         optional: [ sourceId:@_camera.id ]
