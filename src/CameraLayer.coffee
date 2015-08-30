@@ -7,6 +7,7 @@ class CameraLayer extends Layer
 
     @_video = document.createElement "video"
     @_video.autoplay = true
+    @_video.muted = true
 
     _.extend @_video.style,
       width: "100%"
@@ -80,10 +81,7 @@ class CameraLayer extends Layer
     @_video.src = ''
     @_stream?.stop()
 
-    @_getUserMedia
-      video:
-        optional: [ sourceId:@_camera.id ]
-        mandatory: { minWidth:1920, minHeight:1080 }
+    @_getUserMedia {video: true, audio: true},
       (stream) =>
         @_stream = stream
         @_video.src = URL.createObjectURL stream
