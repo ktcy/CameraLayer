@@ -89,8 +89,9 @@ class CameraLayer extends Layer
       (error) =>
         console.error error
 
-  _getUserMedia:
-    (navigator.getUserMedia ? navigator.webkitGetUserMedia).bind navigator
+  _getUserMedia: do ->
+    getUserMedia = navigator.getUserMedia ? navigator.webkitGetUserMedia
+    if getUserMedia? then getUserMedia.bind(navigator) else null
 
   _flip: ->
     x = if @_camera.facing is "user" then -1 else 1
@@ -102,4 +103,5 @@ class CameraLayer extends Layer
     _.isFunction(getUserMedia) and _.isFunction(createObjectURL)
 
 
+module.exports = CameraLayer if module?
 Framer.CameraLayer = CameraLayer
