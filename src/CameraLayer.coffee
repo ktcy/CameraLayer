@@ -1,11 +1,11 @@
 class CameraLayer extends Layer
   constructor: (options = {}) ->
-    super options
+    super(options)
 
     @_camera = null
     @_stream = null
 
-    @_video = document.createElement "video"
+    @_video = document.createElement("video")
     @_video.autoplay = true
     @_video.muted = true
 
@@ -14,7 +14,7 @@ class CameraLayer extends Layer
       height: "100%"
       objectFit: "cover"
 
-    @_element.appendChild @_video
+    @_element.appendChild(@_video)
 
     @autoflip = true
     @facing = "environment"
@@ -24,7 +24,7 @@ class CameraLayer extends Layer
   @define "facing",
     get: -> @_facing
     set: (value) ->
-      @_facing = value if value is "user" or value is "environment"
+      @_facing = value if value == "user" || value == "environment"
 
   @define "autoflip",
     get: -> @_autoflip
@@ -36,14 +36,14 @@ class CameraLayer extends Layer
       when "environment" then @facing = "user"
 
   capture: (width = @width, height = @height, ratio = window.devicePixelRatio) ->
-    canvas = document.createElement "canvas"
+    canvas = document.createElement("canvas")
     canvas.width = ratio * width
     canvas.height = ratio * height
 
-    context = canvas.getContext "2d"
-    @draw context
+    context = canvas.getContext("2d")
+    @draw(context)
 
-    canvas.toDataURL "image/png"
+    canvas.toDataURL("image/png")
 
   draw: (context) ->
     return unless context
@@ -56,19 +56,19 @@ class CameraLayer extends Layer
 
     {videoWidth, videoHeight} = @_video
 
-    clipBox = width:context.canvas.width, height:context.canvas.height
-    layerBox = cover @width, @height, clipBox.width, clipBox.height
-    videoBox = cover videoWidth, videoHeight, layerBox.width, layerBox.height
+    clipBox = width: context.canvas.width, height: context.canvas.height
+    layerBox = cover(@width, @height, clipBox.width, clipBox.height)
+    videoBox = cover(videoWidth, videoHeight, layerBox.width, layerBox.height)
 
     x = (clipBox.width - videoBox.width) / 2
     y = (clipBox.height - videoBox.height) / 2
 
-    context.drawImage @_video, x, y, videoBox.width, videoBox.height
+    context.drawImage(@_video, x, y, videoBox.width, videoBox.height)
 
   start: ->
-    MediaStreamTrack.getSources (sources) =>
-      camera = _.findWhere sources, kind:"video", facing:@_facing
-      camera ?= _.findWhere sources, kind:"video"
+    @_getSources (sources) =>
+      camera = _.findWhere sources, kind: "video", facing: @_facing
+      camera ?= _.findWhere sources, kind: "video"
       oldId = @_camera?.id
       newId = camera?.id
 
@@ -84,16 +84,24 @@ class CameraLayer extends Layer
     @_getUserMedia {video: true, audio: true},
       (stream) =>
         @_stream = stream
-        @_video.src = URL.createObjectURL stream
+        @_video.src = URL.createObjectURL(stream)
         @_flip()
       (error) =>
-        console.error error
+        console.error(error)
 
-  _getUserMedia:
-    (navigator.getUserMedia ? navigator.webkitGetUserMedia).bind navigator
+  _getSources: do ->
+    MediaStreamTrack = window.MediaStreamTrack ? {}
+    getSources = MediaStreamTrack.getSources
+    getSourcesFallback = -> # do nothing
+    (getSources ? getSourcesFallback).bind(MediaStreamTrack)
+
+  _getUserMedia: do ->
+    getUserMedia = navigator.getUserMedia ? navigator.webkitGetUserMedia
+    getUserMediaFallback = -> # do nothing
+    (getUserMedia ? getUserMediaFallback).bind(navigator)
 
   _flip: ->
-    x = if @_camera.facing is "user" then -1 else 1
+    x = if @_camera.facing == "user" then -1 else 1
     @_video.style.webkitTransform = "scale(" + x + ",1)"
 
   _supportUserMedia: ->
@@ -102,4 +110,5 @@ class CameraLayer extends Layer
     _.isFunction(getUserMedia) and _.isFunction(createObjectURL)
 
 
+module.exports = CameraLayer if module?
 Framer.CameraLayer = CameraLayer
