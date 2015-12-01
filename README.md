@@ -38,6 +38,7 @@ CameraLayer is available under `Framer` namespace by loading the script:
 ```js
 Utils.domLoadScriptSync('./CameraLayer.js');
 
+<<<<<<< HEAD
 var camera = new Framer.CameraLayer();
 camera.start();
 ```
@@ -45,6 +46,9 @@ camera.start();
 Also it can be loaded by module system such as [Browserify](http://browserify.org) or [Webpack](https://webpack.github.io):
 ```js
 var CameraLayer = require('./CameraLayer');
+=======
+var CameraLayer = Framer.CameraLayer;
+>>>>>>> master
 var camera = new CameraLayer();
 camera.start();
 ```
