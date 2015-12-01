@@ -24,7 +24,7 @@ class CameraLayer extends Layer
   @define "facing",
     get: -> @_facing
     set: (value) ->
-      @_facing = value if value is "user" or value is "environment"
+      @_facing = value if value == "user" || value == "environment"
 
   @define "autoflip",
     get: -> @_autoflip
@@ -56,7 +56,7 @@ class CameraLayer extends Layer
 
     {videoWidth, videoHeight} = @_video
 
-    clipBox = width:context.canvas.width, height:context.canvas.height
+    clipBox = width: context.canvas.width, height: context.canvas.height
     layerBox = cover @width, @height, clipBox.width, clipBox.height
     videoBox = cover videoWidth, videoHeight, layerBox.width, layerBox.height
 
@@ -66,9 +66,9 @@ class CameraLayer extends Layer
     context.drawImage @_video, x, y, videoBox.width, videoBox.height
 
   start: ->
-    MediaStreamTrack.getSources (sources) =>
-      camera = _.findWhere sources, kind:"video", facing:@_facing
-      camera ?= _.findWhere sources, kind:"video"
+    @_getSources (sources) =>
+      camera = _.findWhere sources, kind: "video", facing: @_facing
+      camera ?= _.findWhere sources, kind: "video"
       oldId = @_camera?.id
       newId = camera?.id
 
@@ -89,9 +89,16 @@ class CameraLayer extends Layer
       (error) =>
         console.error error
 
+  _getSources: do ->
+    MediaStreamTrack = window.MediaStreamTrack ? {}
+    getSources = MediaStreamTrack.getSources
+    getSourcesFallback = -> # do nothing
+    (getSources ? getSourcesFallback).bind(MediaStreamTrack)
+
   _getUserMedia: do ->
     getUserMedia = navigator.getUserMedia ? navigator.webkitGetUserMedia
-    if getUserMedia? then getUserMedia.bind(navigator) else null
+    getUserMediaFallback = -> # do nothing
+    (getUserMedia ? getUserMediaFallback).bind(navigator)
 
   _flip: ->
     x = if @_camera.facing is "user" then -1 else 1
