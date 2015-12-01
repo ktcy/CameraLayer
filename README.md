@@ -11,6 +11,6 @@ Usage
 Utils.domLoadScriptSync('CameraLayer.js');
 
 var CameraLayer = Framer.CameraLayer;
-var Camera = new CameraLayer();
+var camera = new CameraLayer();
 camera.start();
 ```
