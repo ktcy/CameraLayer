@@ -22,12 +22,15 @@ Working with Framer Studio
   ```
   But nothing happens in Framer Studio. See the next step.
 3. **View your prototype with Google Chrome.**
+
+   Framer Studio doesn't support the camera access. You always have to view your prototype with Google Chrome.
+
+   **Instructions:**
    1. Click **Mirror** button in Framer Studio's toolbar.
    2. Click **Copy Link** in the menu.
-   3. Paste the copied link into the location bar of Google Chrome.
+   3. Paste the copied link into the location bar of Google Chrome, then replace the IP address such like `x.x.x.x:8000` to `localhost:8000` (\*), and press enter.
 
-   **Note:**  
-   Framer Studio doesn't support the camera access. You always have to view your prototype with Google Chrome.
+   \* From version 47, Google Chrome deprecates the camera access from insecure origins. This means that your prototype have to be hosted by HTTPS or localhost.
 
 For non-Framer Studio environment
 -----
