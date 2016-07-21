@@ -67,8 +67,8 @@ class CameraLayer extends Layer
 
   start: ->
     @_getSources (sources) =>
-      camera = _.findWhere sources, kind: "video", facing: @_facing
-      camera ?= _.findWhere sources, kind: "video"
+      camera = _.find sources, kind: "video", facing: @_facing
+      camera ?= _.find sources, kind: "video"
       oldId = @_camera?.id
       newId = camera?.id
 

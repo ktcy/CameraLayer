@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "build": "grunt"
+    "build": "grunt",
+    "build:watch": "grunt watch"
   },
   "devDependencies": {
     "grunt": "^1.0.1",
