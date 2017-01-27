@@ -1,39 +1,70 @@
-class CameraLayer extends Layer
+class CameraLayer extends VideoLayer
   constructor: (options = {}) ->
-    super(options)
+    customProps =
+      facing: true
+      flipped: true
+      autoFlip: true
+      resolution: true
+      fit: true
 
-    @_camera = null
+    baseOptions = Object.keys(options)
+      .filter (key) -> !customProps[key]
+      .reduce (clone, key) ->
+        clone[key] = options[key]
+        clone
+      , {}
+
+    super(baseOptions)
+
+    @_facing = options.facing ? 'back'
+    @_flipped = options.flipped ? false
+    @_autoFlip = options.autoFlip ? true
+    @_resolution = options.resolution ? 480
+
+    @_started = false
+    @_device = null
+    @_matchedFacing = 'unknown'
     @_stream = null
+    @_scheduledRestart = null
 
-    @_video = document.createElement("video")
-    @_video.autoplay = true
-    @_video.muted = true
+    @backgroundColor = 'transparent'
 
-    _.extend @_video.style,
-      width: "100%"
-      height: "100%"
-      objectFit: "cover"
+    @player.src = ''
+    @player.autoplay = true
+    @player.muted = true
+    @player.style.objectFit = options.fit ? 'cover'
 
-    @_element.appendChild(@_video)
-
-    @autoflip = true
-    @facing = "environment"
-    @clip = true;
-    @backgroundColor = "rgba(0, 0, 0, 1.0)"
-
-  @define "facing",
+  @define 'facing',
     get: -> @_facing
-    set: (value) ->
-      @_facing = value if value == "user" || value == "environment"
+    set: (facing) ->
+      @_facing = if facing == 'front' then facing else 'back'
+      @_setRestart()
 
-  @define "autoflip",
-    get: -> @_autoflip
-    set: (value) -> @_autoflip = !!value
+  @define 'flipped',
+    get: -> @_flipped
+    set: (flipped) ->
+      @_flipped = flipped
+      @_setRestart()
+
+  @define 'autoFlip',
+    get: -> @_autoFlip
+    set: (autoFlip) ->
+      @_autoFlip = autoFlip
+      @_setRestart()
+
+  @define 'resolution',
+    get: -> @_resolution
+    set: (resolution) ->
+      @_resolution = resolution
+      @_setRestart()
+
+  @define 'fit',
+    get: -> @player.style.objectFit
+    set: (fit) -> @player.style.objectFit = fit
 
   toggleFacing: ->
-    switch @facing
-      when "user" then @facing = "environment"
-      when "environment" then @facing = "user"
+    @_facing = if @_facing == 'front' then 'back' else 'front'
+    @_setRestart()
 
   capture: (width = @width, height = @height, ratio = window.devicePixelRatio) ->
     canvas = document.createElement("canvas")
@@ -54,7 +85,7 @@ class CameraLayer extends Layer
       scale = if scaleX > scaleY then scaleX else scaleY
       width: srcW * scale, height: srcH * scale
 
-    {videoWidth, videoHeight} = @_video
+    {videoWidth, videoHeight} = @player
 
     clipBox = width: context.canvas.width, height: context.canvas.height
     layerBox = cover(@width, @height, clipBox.width, clipBox.height)
@@ -63,52 +94,83 @@ class CameraLayer extends Layer
     x = (clipBox.width - videoBox.width) / 2
     y = (clipBox.height - videoBox.height) / 2
 
-    context.drawImage(@_video, x, y, videoBox.width, videoBox.height)
+    context.drawImage(@player, x, y, videoBox.width, videoBox.height)
 
   start: ->
-    @_getSources (sources) =>
-      camera = _.find sources, kind: "video", facing: @_facing
-      camera ?= _.find sources, kind: "video"
-      oldId = @_camera?.id
-      newId = camera?.id
+    @_enumerateDevices()
+    .then (devices) =>
+      devices = devices.filter (device) -> device.kind == 'videoinput'
 
-      return if newId is oldId
+      for device in devices
+        if device.label.indexOf(@_facing) != -1
+          @_matchedFacing = @_facing
+          return device
 
-      @_camera = camera
-      @_requestCamera()
+      @_matchedFacing = 'unknown'
 
-  _requestCamera: ->
-    @_video.src = ''
-    @_stream?.stop()
+      if devices.length > 0 then devices[0] else Promise.reject()
 
-    @_getUserMedia {video: true, audio: true},
-      (stream) =>
+    .then (device) =>
+      return if !device || device.deviceId == @_device?.deviceId
+
+      @stop()
+      @_device = device
+
+      constraints =
+        video:
+          mandatory: {minWidth: @_resolution, minHeight: @_resolution}
+          optional: [{sourceId: @_device.deviceId}]
+        audio:
+          false
+
+      @_getUserMedia(constraints).then (stream) =>
+        @player.src = URL.createObjectURL(stream)
+        @_started = true
         @_stream = stream
-        @_video.src = URL.createObjectURL(stream)
         @_flip()
-      (error) =>
-        console.error(error)
 
-  _getSources: do ->
-    MediaStreamTrack = window.MediaStreamTrack ? {}
-    getSources = MediaStreamTrack.getSources
-    getSourcesFallback = -> # do nothing
-    (getSources ? getSourcesFallback).bind(MediaStreamTrack)
+    .catch (error) ->
+      console.error(error)
 
-  _getUserMedia: do ->
-    getUserMedia = navigator.getUserMedia ? navigator.webkitGetUserMedia
-    getUserMediaFallback = -> # do nothing
-    (getUserMedia ? getUserMediaFallback).bind(navigator)
+  stop: ->
+    @_started = false
+
+    @player.pause()
+    @player.src = ''
+
+    @_stream?.getTracks().forEach (track) -> track.stop()
+    @_stream = null
+    @_device = null
+
+    if @_scheduledRestart
+      cancelAnimationFrame(@_scheduledRestart)
+      @_scheduledRestart = null
+
+  _setRestart: ->
+    return if !@_started || @_scheduledRestart
+
+    @_scheduledRestart = requestAnimationFrame =>
+      @_scheduledRestart = null
+      @start()
 
   _flip: ->
-    x = if @_camera.facing == "user" then -1 else 1
-    @_video.style.webkitTransform = "scale(" + x + ",1)"
+    @_flipped = @_matchedFacing == 'front' if @_autoFlip
+    x = if @_flipped then -1 else 1
+    @player.style.webkitTransform = "scale(#{x}, 1)"
 
-  _supportUserMedia: ->
-    getUserMedia = navigator.getUserMedia ? navigator.webkitGetUserMedia
-    createObjectURL = window.URL?.createObjectURL
-    _.isFunction(getUserMedia) and _.isFunction(createObjectURL)
+  _enumerateDevices: ->
+    try
+      navigator.mediaDevices.enumerateDevices()
+    catch
+      Promise.reject()
 
+  _getUserMedia: (constraints) ->
+    new Promise (resolve, reject) ->
+      try
+        gum = navigator.getUserMedia || navigator.webkitGetUserMedia
+        gum.call(navigator, constraints, resolve, reject)
+      catch
+        reject()
 
 module.exports = CameraLayer if module?
 Framer.CameraLayer = CameraLayer
