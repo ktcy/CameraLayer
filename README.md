@@ -9,6 +9,7 @@ Working with Framer Studio
 1. **Download [CameraLayer.coffee](https://raw.githubusercontent.com/ktcy/CameraLayer/master/src/CameraLayer.coffee).**
 
    Place it into `modules` folder under your Framer Studio project. ([details](http://framerjs.com/docs/#modules.modules))
+
 2. **Write a code.**
   ```coffee
   # Load CameraLayer
@@ -21,6 +22,7 @@ Working with Framer Studio
   camera.start()
   ```
   But nothing happens in Framer Studio. See the next step.
+
 3. **View your prototype with Google Chrome.**
 
    Framer Studio doesn't support the camera access. You always have to view your prototype with Google Chrome.
