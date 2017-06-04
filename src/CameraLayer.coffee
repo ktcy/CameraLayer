@@ -26,8 +26,10 @@ class CameraLayer extends VideoLayer
     @_matchedFacing = 'unknown'
     @_stream = null
     @_scheduledRestart = null
+    @_recording = null
 
     @backgroundColor = 'transparent'
+    @clip = true
 
     @player.src = ''
     @player.autoplay = true
@@ -62,6 +64,9 @@ class CameraLayer extends VideoLayer
     get: -> @player.style.objectFit
     set: (fit) -> @player.style.objectFit = fit
 
+  @define 'isRecording',
+    get: -> @_recording?.recorder.state == 'recording'
+
   toggleFacing: ->
     @_facing = if @_facing == 'front' then 'back' else 'front'
     @_setRestart()
@@ -74,7 +79,10 @@ class CameraLayer extends VideoLayer
     context = canvas.getContext("2d")
     @draw(context)
 
-    canvas.toDataURL("image/png")
+    url = canvas.toDataURL()
+    @emit('capture', url)
+
+    url
 
   draw: (context) ->
     return unless context
@@ -121,13 +129,15 @@ class CameraLayer extends VideoLayer
           mandatory: {minWidth: @_resolution, minHeight: @_resolution}
           optional: [{sourceId: @_device.deviceId}]
         audio:
-          false
+          true
 
-      @_getUserMedia(constraints).then (stream) =>
-        @player.src = URL.createObjectURL(stream)
-        @_started = true
-        @_stream = stream
-        @_flip()
+      @_getUserMedia(constraints)
+
+    .then (stream) =>
+      @player.src = URL.createObjectURL(stream)
+      @_started = true
+      @_stream = stream
+      @_flip()
 
     .catch (error) ->
       console.error(error)
@@ -145,6 +155,36 @@ class CameraLayer extends VideoLayer
     if @_scheduledRestart
       cancelAnimationFrame(@_scheduledRestart)
       @_scheduledRestart = null
+
+  startRecording: ->
+    if @_recording
+      @_recording.recorder.stop()
+      @_recording = null
+
+    chunks = []
+
+    recorder = new MediaRecorder(@_stream, {mimeType: 'video/webm'})
+    recorder.addEventListener 'start', (event) => @emit('startrecording')
+    recorder.addEventListener 'dataavailable', (event) -> chunks.push(event.data)
+    recorder.addEventListener 'stop', (event) =>
+      blob = new Blob(chunks)
+      url = window.URL.createObjectURL(blob)
+      @emit('stoprecording')
+      @emit('record', url)
+
+    recorder.start()
+
+    @_recording = {recorder, chunks}
+
+  stopRecording: ->
+    return if !@_recording
+    @_recording.recorder.stop()
+    @_recording = null
+
+  onCapture: (callback) -> @on('capture', callback)
+  onStartRecording: (callback) -> @on('startrecording', callback)
+  onStopRecording: (callback) -> @on('stoprecording', callback)
+  onRecord: (callback) -> @on('record', callback)
 
   _setRestart: ->
     return if !@_started || @_scheduledRestart
