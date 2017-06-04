@@ -33,23 +33,3 @@ Working with Framer Studio
    3. Paste the copied link into the location bar of Google Chrome, then replace the IP address such like `x.x.x.x:8000` to `localhost:8000` (\*), and press enter.
 
    \* From version 47, Google Chrome deprecates the camera access from insecure origins. This means that your prototype have to be hosted by HTTPS or localhost.
-
-For non-Framer Studio environment
------
-
-Download [CameraLayer.js](https://github.com/ktcy/CameraLayer/tree/master/lib), and load it after framer.js.
-
-CameraLayer is available under `Framer` namespace by loading the script:
-```js
-Utils.domLoadScriptSync('./CameraLayer.js');
-
-var camera = new Framer.CameraLayer();
-camera.start();
-```
-
-Also it can be loaded by module system such as [Browserify](http://browserify.org) or [Webpack](https://webpack.github.io):
-```js
-var CameraLayer = require('./CameraLayer');
-var camera = new CameraLayer();
-camera.start();
-```

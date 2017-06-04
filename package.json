@@ -1,12 +1,13 @@
 {
   "scripts": {
-    "build": "grunt",
-    "build:watch": "grunt watch"
+    "start": "npm test",
+    "test": "webpack-dev-server --config test/webpack.config.js"
   },
-  "devDependencies": {
-    "grunt": "^1.0.1",
-    "grunt-cli": "^1.2.0",
-    "grunt-contrib-coffee": "^0.10.1",
-    "grunt-contrib-watch": "^0.6.1"
-  }
+  "dependencies": {
+    "coffee-loader": "^0.7.3",
+    "coffee-script": "^1.12.6",
+    "webpack": "^2.6.1",
+    "webpack-dev-server": "^2.4.5"
+  },
+  "private": true
 }
