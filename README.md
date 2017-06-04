@@ -3,11 +3,15 @@ CameraLayer
 
 Framer layer displaying image from a camera device.
 
+<br>
+
 Requirements
 ------------
 
 - [Framer](https://framer.com/) — This is optional if you are coding with [Framer Library](https://github.com/koenbok/Framer).
 - [Google Chrome](https://www.google.com/chrome) — CameraLayer works only with the desktop or Android version of Google Chrome. Other web browsers and platforms are not supported.
+
+<br>
 
 Getting started
 ---------------
@@ -37,6 +41,8 @@ CameraLayer doesn't display anything in Framer's preview window at this time. Yo
 
 Open **http://localhost:8000/** with **Google Chrome**. You can see the list of your Framer prototypes, then choose the one which was coded in the step above.
 
+<br>
+
 Capture a still image
 ---------------------
 
@@ -60,6 +66,8 @@ captureButton.onClick ->
 camera.onCapture (imageURL) ->
   imageView.image = imageURL
 ```
+
+<br>
 
 Record a video
 --------------
