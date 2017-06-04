@@ -12,11 +12,11 @@ Requirements
 Getting started
 ---------------
 
-#### 1. Install
+### 1. Install
 
 Download **[CameraLayer.coffee](https://raw.githubusercontent.com/ktcy/CameraLayer/master/src/CameraLayer.coffee)**, and put it into the **modules** folder in your Framer prototype. ([Learn more about the modules](https://framer.com/docs/#modules.modules))
 
-#### 2. Code
+### 2. Code
 
 Write the following code with Framer.
 
@@ -33,14 +33,14 @@ camera.start()
 
 CameraLayer doesn't display anything in Framer's preview window at this time. You have to use Google Chrome to view your prototype. See the next step.
 
-#### 3. View
+### 3. View
 
 Open **http://localhost:8000/** with **Google Chrome**. You can see the list of your Framer prototypes, then choose the one which was coded in the step above.
 
 Capture a still image
 ---------------------
 
-#### `capture()`
+### `capture()`
 
 CameraLayer captures a still image by `capture()`. After the capturing is done, CameraLayer emits `capture` event with a URL of the captured image. You can use `onCapture` as a shortcut for the event.
 
@@ -64,9 +64,9 @@ camera.onCapture (imageURL) ->
 Record a video
 --------------
 
-#### `startRecording()`, `stopRecording()`
+### `startRecording()`, `stopRecording()`
 
-After the recording is done, CameraLayer emits `record` event with a URL of the recorded video. You can use `onRecord` as a shortcut for the event.
+CameraLayer starts video recording by `startRecording()`, and stops by `stopRecording()`. After the recording is done, CameraLayer emits `record` event with a URL of the recorded video. You can use `onRecord` as a shortcut for the event.
 
 ```coffee
 # Create layers
