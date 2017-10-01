@@ -34,6 +34,7 @@ class CameraLayer extends VideoLayer
     @player.src = ''
     @player.autoplay = true
     @player.muted = true
+    @player.playsinline = true
     @player.style.objectFit = options.fit ? 'cover'
 
   @define 'facing',
@@ -134,7 +135,7 @@ class CameraLayer extends VideoLayer
       @_getUserMedia(constraints)
 
     .then (stream) =>
-      @player.src = URL.createObjectURL(stream)
+      @player.srcObject = stream
       @_started = true
       @_stream = stream
       @_flip()
