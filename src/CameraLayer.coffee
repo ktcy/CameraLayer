@@ -147,7 +147,7 @@ class CameraLayer extends VideoLayer
     @_started = false
 
     @player.pause()
-    @player.src = ''
+    @player.srcObject = null
 
     @_stream?.getTracks().forEach (track) -> track.stop()
     @_stream = null
