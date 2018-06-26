@@ -19,11 +19,9 @@ class CameraLayer extends VideoLayer
     @_facing = options.facing ? 'back'
     @_flipped = options.flipped ? false
     @_autoFlip = options.autoFlip ? true
-    @_resolution = options.resolution ? 480
+    @_resolution = options.resolution ? 720
 
     @_started = false
-    @_device = null
-    @_matchedFacing = 'unknown'
     @_stream = null
     @_scheduledRestart = null
     @_recording = null
@@ -40,7 +38,7 @@ class CameraLayer extends VideoLayer
   @define 'facing',
     get: -> @_facing
     set: (facing) ->
-      @_facing = if facing == 'front' then facing else 'back'
+      @_facing = if facing == 'front' then 'front' else 'back'
       @_setRestart()
 
   @define 'flipped',
@@ -106,35 +104,13 @@ class CameraLayer extends VideoLayer
     context.drawImage(@player, x, y, videoBox.width, videoBox.height)
 
   start: ->
-    @_enumerateDevices()
-    .then (devices) =>
-      devices = devices.filter (device) -> device.kind == 'videoinput'
+    constraints =
+      video:
+        facingMode: {ideal: if @_facing == 'front' then 'user' else 'environment'}
+      audio:
+        true
 
-      for device in devices
-        if device.label.indexOf(@_facing) != -1
-          @_matchedFacing = @_facing
-          return device
-
-      @_matchedFacing = 'unknown'
-
-      if devices.length > 0 then devices[0] else Promise.reject()
-
-    .then (device) =>
-      return if !device || device.deviceId == @_device?.deviceId
-
-      @stop()
-      @_device = device
-
-      constraints =
-        video:
-          mandatory: {minWidth: @_resolution, minHeight: @_resolution}
-          optional: [{sourceId: @_device.deviceId}]
-        audio:
-          true
-
-      @_getUserMedia(constraints)
-
-    .then (stream) =>
+    @_getUserMedia(constraints).then (stream) =>
       @player.srcObject = stream
       @_started = true
       @_stream = stream
@@ -151,7 +127,6 @@ class CameraLayer extends VideoLayer
 
     @_stream?.getTracks().forEach (track) -> track.stop()
     @_stream = null
-    @_device = null
 
     if @_scheduledRestart
       cancelAnimationFrame(@_scheduledRestart)
@@ -195,7 +170,7 @@ class CameraLayer extends VideoLayer
       @start()
 
   _flip: ->
-    @_flipped = @_matchedFacing == 'front' if @_autoFlip
+    @_flipped = @_facing == 'user' if @_autoFlip
     x = if @_flipped then -1 else 1
     @player.style.webkitTransform = "scale(#{x}, 1)"
 
@@ -206,12 +181,10 @@ class CameraLayer extends VideoLayer
       Promise.reject()
 
   _getUserMedia: (constraints) ->
-    new Promise (resolve, reject) ->
-      try
-        gum = navigator.getUserMedia || navigator.webkitGetUserMedia
-        gum.call(navigator, constraints, resolve, reject)
-      catch
-        reject()
+    try
+      navigator.mediaDevices.getUserMedia(constraints)
+    catch
+      Promise.reject()
 
 module.exports = CameraLayer if module?
 Framer.CameraLayer = CameraLayer
