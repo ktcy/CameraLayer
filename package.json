@@ -4,10 +4,11 @@
     "test": "webpack-dev-server --config test/webpack.config.js"
   },
   "dependencies": {
-    "coffee-loader": "^0.7.3",
-    "coffee-script": "^1.12.6",
-    "webpack": "^2.7.0",
-    "webpack-dev-server": "^2.9.1"
+    "coffee-loader": "^0.9.0",
+    "coffeescript": "^2.4.1",
+    "webpack": "^4.35.3",
+    "webpack-cli": "^3.3.5",
+    "webpack-dev-server": "^3.7.2"
   },
   "private": true
 }
