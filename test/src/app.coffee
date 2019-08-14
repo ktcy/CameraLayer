@@ -1,8 +1,6 @@
 CameraLayer = require('CameraLayer')
 
-camera = new CameraLayer()
-camera.start()
-
+camera = new CameraLayer(backgroundColor: '#000')
 imageView = new Layer()
 videoView = new VideoLayer(clip: true)
 
@@ -22,11 +20,15 @@ createButton = (text) ->
 
   layer
 
+startButton = createButton('START')
 captureButton = createButton('CAPTURE')
 recordButton = createButton('RECORD')
 
 captureButton.onClick ->
   camera.capture()
+
+startButton.onClick ->
+  camera.start()
 
 camera.onCapture (imageURL) ->
   imageView.image = imageURL
@@ -56,8 +58,11 @@ layout = ->
     size: camera.size
     x: imageView.maxX + 20, y: camera.maxY + 20
 
-  captureButton.props =
+  startButton.props =
     x: camera.maxX + 40, y: camera.minY + 20
+
+  captureButton.props =
+    x: camera.maxX + 40, y: startButton.maxY + 20
 
   recordButton.props =
     x: camera.maxX + 40, y: captureButton.maxY + 20

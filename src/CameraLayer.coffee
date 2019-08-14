@@ -12,7 +12,7 @@ class CameraLayer extends VideoLayer
       .reduce (clone, key) ->
         clone[key] = options[key]
         clone
-      , {}
+      , { backgroundColor: 'transparent' }
 
     super(baseOptions)
 
@@ -26,10 +26,8 @@ class CameraLayer extends VideoLayer
     @_scheduledRestart = null
     @_recording = null
 
-    @backgroundColor = 'transparent'
     @clip = true
 
-    @player.src = ''
     @player.autoplay = true
     @player.muted = true
     @player.playsinline = true
